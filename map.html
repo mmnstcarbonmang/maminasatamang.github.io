@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WebGIS Mangrove Kerapatan</title>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+/>
+<link rel="stylesheet" href="css/map-style.css" />
+
+  <link rel="icon" href="images/logo_mangrove.png" type="image/png">
+  <link rel="shortcut icon" href="images/logo_mangrove.png" type="image/png">
+
+<style>
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  #map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+  }
+
+  /* Sidebar kanan */
+  #sidebar-dashboard {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 320px;
+    max-height: 95vh;
+    background: rgba(18, 53, 28, 0.95);
+    backdrop-filter: blur(8px);
+    box-shadow: -4px 0 20px rgba(15, 65, 26, 0.9);
+    border-left: 2px solid #1abb3c;
+    padding: 20px 15px;
+    overflow-y: auto;
+    color: #d0f0bb;
+    font-size: 14px;
+    border-radius: 8px;
+    z-index: 1100;
+  }
+
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  .sidebar-header img {
+    height: 38px;
+    border-radius: 6px;
+    margin-right: 10px;
+  }
+  .sidebar-header span {
+    font-weight: 700;
+    font-size: 1.7rem;
+    color: #caf2b6;
+  }
+
+  .filter-panel label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+  .filter-panel select {
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    color: #23571e;
+    background-color: #cbeac0;
+    box-shadow: inset 0 0 6px #88bd7f;
+  }
+  .filter-panel select:hover,
+  .filter-panel select:focus {
+    background-color: #d3f4b4;
+    outline: none;
+  }
+
+  .layer-control label {
+    display: flex;
+    align-items: center;
+    margin-top: 12px;
+    font-weight: 600;
+  }
+  .layer-control input[type="checkbox"] {
+    margin-right: 7px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+
+  .upload-panel label {
+    font-weight: 600;
+    margin-top: 15px;
+  }
+  .upload-panel input[type="file"] {
+    width: 100%;
+    padding: 6px 12px;
+    font-size: 14px;
+    margin-top: 8px;
+    border-radius: 8px;
+    border: none;
+    background: #cbeac0;
+    cursor: pointer;
+    box-shadow: inset 0 0 5px #94c290;
+  }
+  .button-panel {
+    margin-top: 15px;
+    display: flex;
+    gap: 12px;
+  }
+  .btn-green,
+  .btn-blue {
+    flex-grow: 1;
+    border-radius: 25px;
+    padding: 9px 12px;
+    border: none;
+    font-weight: 600;
+    font-size: 15px;
+    color: #0f2c18;
+    cursor: pointer;
+    box-shadow: 0 0 12px #31c82f8d;
+    transition: background-color 0.3s, box-shadow 0.3s;
+  }
+  .btn-green:hover {
+    background-color: #54b447;
+    box-shadow: 0 0 22px #42e438cc;
+  }
+  .btn-blue {
+    background-color: #3a82bd;
+  }
+  .btn-blue:hover {
+    background-color: #4ea8e8;
+    box-shadow: 0 0 22px #56a3e7cc;
+  }
+
+  /* Legenda */
+  #legend-tab h4 {
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: #cde6b9;
+  }
+  #legend-tab ul {
+    list-style: none;
+    padding-left: 15px;
+  }
+  #legend-tab ul li {
+    margin: 10px 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    color: #a9d49f;
+  }
+  #legend-tab ul li span {
+    min-width: 22px;
+    min-height: 22px;
+    margin-right: 14px;
+    border-radius: 5px;
+  }
+
+  /* Sidebar Kiri - Informasi Luasan */
+  #sidebar-left {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 280px;
+    max-height: 95vh;
+    background: rgba(18, 53, 28, 0.95);
+    backdrop-filter: blur(8px);
+    box-shadow: 4px 0 20px rgba(15, 65, 26, 0.9);
+    border-right: 2px solid #1abb3c;
+    padding: 20px 15px;
+    overflow-y: auto;
+    color: #d0f0bb;
+    font-size: 13px;
+    border-radius: 8px;
+    z-index: 1100;
+  }
+
+  #sidebar-left h3 {
+    margin: 0 0 15px 0;
+    font-weight: 700;
+    color: #caf2b6;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #1abb3c;
+    padding-bottom: 10px;
+  }
+
+  .kerapatan-item {
+    background: rgba(26, 187, 60, 0.15);
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border-left: 4px solid #1abb3c;
+  }
+
+  .kerapatan-item .label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .kerapatan-item .color-box {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    margin-right: 8px;
+  }
+
+  .kerapatan-item .value {
+    color: #8ef67d;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .kerapatan-item .subtext {
+    font-size: 11px;
+    color: #a9d49f;
+    margin-top: 5px;
+  }
+
+  /* Toolbar kiri */
+  .toolbar-left {
+    position: fixed;
+    top: 50px;
+    left: 10px;
+    background: rgba(27, 55, 43, 0.78);
+    border-radius: 16px;
+    padding: 12px 6px;
+    box-shadow: 0 0 24px #1de98e4d;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 1150;
+  }
+  .toolbar-left button {
+    width: 44px;
+    height: 44px;
+    background: #1de98e;
+    border: none;
+    border-radius: 50%;
+    color: #0b3d22;
+    font-size: 1.4rem;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 0 0 20px #29e464af;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+  .toolbar-left button:hover {
+    background-color: #15be74;
+    box-shadow: 0 0 28px #22e964dd;
+    transform: scale(1.15);
+  }
+
+  /* Comprehensive Responsive Design */
+
+  /* Large desktops and laptops */
+  @media (max-width: 1200px) {
+    #sidebar-dashboard {
+      width: 300px;
+    }
+
+    #sidebar-left {
+      width: 260px;
+    }
+  }
+
+  /* Medium desktops and laptops */
+  @media (max-width: 1024px) {
+    #sidebar-dashboard {
+      width: 280px;
+    }
+
+    #sidebar-left {
+      width: 240px;
+    }
+
+    .sidebar-header span {
+      font-size: 1.5rem;
+    }
+  }
+
+  /* Tablets */
+  @media (max-width: 768px) {
+    #sidebar-dashboard {
+      width: 90vw;
+      max-height: 45vh;
+      top: auto;
+      bottom: 10px;
+      right: 5vw;
+      left: 5vw;
+      border-radius: 15px;
+      padding: 15px 12px;
+    }
+
+    #sidebar-left {
+      width: 90vw;
+      max-height: 35vh;
+      top: 10px;
+      left: 5vw;
+      right: 5vw;
+      border-radius: 15px;
+      padding: 15px 12px;
+    }
+
+    #map {
+      height: calc(100vh - 50vh - 20px);
+      top: 40vh;
+    }
+
+    .toolbar-left {
+      top: 45vh;
+      left: 5px;
+      gap: 8px;
+    }
+
+    .toolbar-left button {
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+    }
+
+    .toolbar-right {
+      top: 45vh;
+      right: 5px;
+    }
+
+    .sidebar-header span {
+      font-size: 1.3rem;
+    }
+
+    .filter-panel select,
+    .upload-panel input[type="file"] {
+      font-size: 13px;
+      padding: 5px 8px;
+    }
+
+    .btn-green,
+    .btn-blue {
+      font-size: 14px;
+      padding: 8px 10px;
+    }
+
+    #summary-table {
+      width: 90vw;
+      left: 5vw;
+      bottom: 55vh;
+    }
+
+    #summary-table h4 {
+      font-size: 0.9rem;
+    }
+
+    .kerapatan-item {
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .kerapatan-item .value {
+      font-size: 13px;
+    }
+
+    .kerapatan-item .subtext {
+      font-size: 10px;
+    }
+  }
+
+  /* Mobile landscape */
+  @media (max-width: 640px) {
+    #sidebar-dashboard {
+      width: 95vw;
+      max-height: 40vh;
+      right: 2.5vw;
+      left: 2.5vw;
+      padding: 12px 10px;
+    }
+
+    #sidebar-left {
+      width: 95vw;
+      max-height: 30vh;
+      right: 2.5vw;
+      left: 2.5vw;
+      padding: 12px 10px;
+    }
+
+    #map {
+      height: calc(100vh - 45vh - 15px);
+      top: 35vh;
+    }
+
+    .toolbar-left {
+      top: 40vh;
+      gap: 6px;
+    }
+
+    .toolbar-left button {
+      width: 36px;
+      height: 36px;
+      font-size: 1.1rem;
+    }
+
+    .toolbar-right {
+      top: 40vh;
+    }
+
+    .sidebar-header span {
+      font-size: 1.2rem;
+    }
+
+    .filter-panel select,
+    .upload-panel input[type="file"] {
+      font-size: 12px;
+      padding: 4px 6px;
+    }
+
+    .btn-green,
+    .btn-blue {
+      font-size: 13px;
+      padding: 6px 8px;
+    }
+
+    #summary-table {
+      width: 95vw;
+      left: 2.5vw;
+      bottom: 50vh;
+    }
+
+    #summary-table h4 {
+      font-size: 0.85rem;
+    }
+
+    .kerapatan-item {
+      padding: 8px;
+    }
+
+    .kerapatan-item .value {
+      font-size: 12px;
+    }
+  }
+
+  /* Mobile portrait */
+  @media (max-width: 480px) {
+    #sidebar-dashboard {
+      width: 98vw;
+      max-height: 35vh;
+      right: 1vw;
+      left: 1vw;
+      padding: 10px 8px;
+    }
+
+    #sidebar-left {
+      width: 98vw;
+      max-height: 25vh;
+      right: 1vw;
+      left: 1vw;
+      padding: 10px 8px;
+    }
+
+    #map {
+      height: calc(100vh - 40vh - 10px);
+      top: 30vh;
+    }
+
+    .toolbar-left {
+      top: 35vh;
+      left: 3px;
+      gap: 4px;
+    }
+
+    .toolbar-left button {
+      width: 32px;
+      height: 32px;
+      font-size: 1rem;
+    }
+
+    .toolbar-right {
+      top: 35vh;
+      right: 3px;
+    }
+
+    .sidebar-header span {
+      font-size: 1.1rem;
+    }
+
+    .sidebar-header img {
+      height: 32px;
+    }
+
+    .filter-panel select,
+    .upload-panel input[type="file"] {
+      font-size: 11px;
+      padding: 3px 5px;
+    }
+
+    .btn-green,
+    .btn-blue {
+      font-size: 12px;
+      padding: 5px 7px;
+    }
+
+    #summary-table {
+      width: 98vw;
+      left: 1vw;
+      bottom: 45vh;
+    }
+
+    #summary-table h4 {
+      font-size: 0.8rem;
+    }
+
+    .kerapatan-item {
+      padding: 6px;
+      margin-bottom: 6px;
+    }
+
+    .kerapatan-item .value {
+      font-size: 11px;
+    }
+
+    .kerapatan-item .subtext {
+      font-size: 9px;
+    }
+
+    #sidebar-left h3 {
+      font-size: 1.1rem;
+    }
+  }
+
+  /* Small mobile devices */
+  @media (max-width: 360px) {
+    #sidebar-dashboard {
+      width: 99vw;
+      max-height: 30vh;
+      right: 0.5vw;
+      left: 0.5vw;
+      padding: 8px 6px;
+    }
+
+    #sidebar-left {
+      width: 99vw;
+      max-height: 20vh;
+      right: 0.5vw;
+      left: 0.5vw;
+      padding: 8px 6px;
+    }
+
+    #map {
+      height: calc(100vh - 35vh - 5px);
+      top: 25vh;
+    }
+
+    .toolbar-left {
+      top: 30vh;
+      gap: 3px;
+    }
+
+    .toolbar-left button {
+      width: 28px;
+      height: 28px;
+      font-size: 0.9rem;
+    }
+
+    .toolbar-right {
+      top: 30vh;
+    }
+
+    .sidebar-header span {
+      font-size: 1rem;
+    }
+
+    .sidebar-header img {
+      height: 28px;
+    }
+
+    .filter-panel select,
+    .upload-panel input[type="file"] {
+      font-size: 10px;
+      padding: 2px 4px;
+    }
+
+    .btn-green,
+    .btn-blue {
+      font-size: 11px;
+      padding: 4px 6px;
+    }
+
+    #summary-table {
+      width: 99vw;
+      left: 0.5vw;
+      bottom: 40vh;
+    }
+
+    #summary-table h4 {
+      font-size: 0.75rem;
+    }
+
+    .kerapatan-item {
+      padding: 4px;
+      margin-bottom: 4px;
+    }
+
+    .kerapatan-item .value {
+      font-size: 10px;
+    }
+
+    .kerapatan-item .subtext {
+      font-size: 8px;
+    }
+
+    #sidebar-left h3 {
+      font-size: 1rem;
+    }
+  }
+
+  /* Touch devices optimization */
+  @media (hover: none) and (pointer: coarse) {
+    .toolbar-left button:hover,
+    .toolbar-right-btn:hover,
+    .btn-green:hover,
+    .btn-blue:hover {
+      transform: none;
+    }
+
+    .toolbar-left button,
+    .toolbar-right-btn {
+      width: 48px;
+      height: 48px;
+    }
+
+    .toolbar-left button {
+      font-size: 1.5rem;
+    }
+
+    .toolbar-right-btn {
+      font-size: 1.4rem;
+    }
+  }
+
+  /* High DPI displays */
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .sidebar-header img,
+    .kerapatan-item .color-box {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+  }
+
+  /* Landscape orientation adjustments */
+  @media (max-height: 500px) and (orientation: landscape) {
+    #sidebar-dashboard,
+    #sidebar-left {
+      max-height: 60vh;
+    }
+
+    #map {
+      height: calc(100vh - 70vh);
+      top: 65vh;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      top: 70vh;
+    }
+  }
+</style>
+</head>
+<body>
+  <!-- Sidebar dashboard -->
+  <aside id="sidebar-dashboard">
+    <div class="sidebar-header">
+      <div style="display: flex; align-items: center; flex: 1;">
+        <img src="images/logo_mangrove.png" alt="Logo" />
+        <span>WEBGIS CARBON </span>
+      </div>
+      <button id="btn-hide-sidebar" class="sidebar-hide-btn" title="Hide"><i class="fa-solid fa-times"></i></button>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="data-tab">Data</button>
+      <button class="tab-btn" data-tab="legend-tab">Legenda</button>
+    </div>
+    <div id="data-tab" class="tab-content active">
+      <div class="filter-panel">
+        <label for="wilayah">Pilih Wilayah:</label>
+        <select id="wilayah">
+          <option value="semua">Semua</option>
+          <option value="makassar">Makassar</option>
+          <option value="takalar">Takalar</option>
+          <option value="maros">Maros</option>
+        </select>
+      </div>
+      <hr />
+      <div class="layer-control">
+        <label><input type="checkbox" checked id="agc-layer" /> Sebaran Mangrove</label>
+        <label><input type="checkbox" checked id="lokasi-layer" /> Layer Lokasi</label>
+      </div>
+      <hr />
+      <div class="upload-panel">
+        <label for="geojson-upload">Upload GeoJSON:</label>
+        <input type="file" id="geojson-upload" accept=".geojson" />
+      </div>
+      <!-- Download buttons removed per request -->
+
+      </div>
+    </div>
+      <!-- Right toolbar with basemap button (visible) -->
+      <div class="toolbar-right" style="position:fixed; top:50px; right:10px; z-index:1200;">
+        <div class="basemap-dropdown">
+          <button title="Change Basemap" id="btn-basemap-toggle-right" class="toolbar-right-btn"><i class="fa-solid fa-layer-group"></i></button>
+          <div class="basemap-menu" id="basemap-menu-right">
+            <div class="basemap-item" data-basemap="osm"><i class="fa-solid fa-map"></i><span>OpenStreetMap</span></div>
+            <div class="basemap-item" data-basemap="topo"><i class="fa-solid fa-mountain"></i><span>OpenTopoMap</span></div>
+            <div class="basemap-item" data-basemap="satellite"><i class="fa-solid fa-satellite"></i><span>ESRI Satellite</span></div>
+          </div>
+        </div>
+      </div>
+    <div id="legend-tab" class="tab-content">
+      <h4>Legenda Kerapatan Mangrove</h4>
+      <ul>
+        <li>
+          <span
+            style="
+              background: #2ecc40;
+              display: inline-block;
+              width: 20px;
+              height: 20px;
+              margin-right: 8px;
+              border-radius: 4px;
+            "
+          ></span>
+          Lebat
+        </li>
+        <li>
+          <span
+            style="
+              background: #a4e69b;
+              display: inline-block;
+              width: 20px;
+              height: 20px;
+              margin-right: 8px;
+              border-radius: 4px;
+            "
+          ></span>
+          Sedang
+        </li>
+        <li>
+          <span
+            style="
+              background: #f3ffbd;
+              display: inline-block;
+              width: 20px;
+              height: 20px;
+              margin-right: 8px;
+              border-radius: 4px;
+            "
+          ></span>
+          Jarang
+        </li>
+        <li>
+          <span style="background: #1abb3c; display: inline-block; width: 14px; height: 14px; margin-right: 8px; border-radius: 50%; border: 2px solid #0f4c23;"></span>
+          Lokasi Survey
+        </li>
+      </ul>
+    </div>
+  </aside>
+
+  <div id="sidebar-tools" class="toolbar-left">
+    <button title="Zoom In" id="btn-zoomin"><i class="fa-solid fa-plus"></i></button>
+    <button title="Zoom Out" id="btn-zoomout"><i class="fa-solid fa-minus"></i></button>
+    <button title="Extent" id="btn-extent"><i class="fa-solid fa-globe"></i></button>
+    <button title="Draw Polygon" id="btn-draw-polygon"><i class="fa-solid fa-draw-polygon"></i></button>
+    <button title="Measure" id="btn-measure"><i class="fa-solid fa-ruler-horizontal"></i></button>
+    <button title="Pan" id="btn-pan"><i class="fa-solid fa-arrows-up-down-left-right"></i></button>
+    
+  </div>
+
+
+
+  </div>
+
+  <div id="map"></div>
+
+  <!-- Show Panels button removed per request -->
+  <div id="summary-table" class="data-table">
+      <div class="table-header">
+      <h4 style="margin: 0; font-size: 0.95rem; color: #8ef67d;">📊 Statistik Kerapatan</h4>
+      </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Jenis Kerapatan</th>
+          <th>Luas (ha)</th>
+          <th>%</th>
+          <th>Visualisasi</th>
+        </tr>
+      </thead>
+      <tbody id="kerapatan-table-body">
+        <tr>
+          <td colspan="4" style="text-align: center; padding: 20px; color: #999;">Memuat data...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Hidden select untuk sync basemap -->
+  <select id="basemap-select-right" style="display: none;">
+    <option value="osm">OpenStreetMap</option>
+    <option value="topo">OpenTopoMap</option>
+    <option value="satellite">ESRI Satellite</option>
+
+  </select>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script src="js/map.js"></script>
+</body>
+</html>

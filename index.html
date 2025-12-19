@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mangrove Carbon StoryMap</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="images/logo_mangrove.png" type="image/png">
+  <link rel="shortcut icon" href="images/logo_mangrove.png" type="image/png">
+  <!-- Preload critical images to reduce perceived load time -->
+  <link rel="preload" as="image" href="images/screen-demo.png">
+  <link rel="preload" as="image" href="images/laptop.png">
+  <link rel="preload" as="image" href="images/logo_mangrove.png">
+  <link rel="preload" as="image" href="images/Peta/Peta Makassar.jpg">
+  <link rel="preload" as="image" href="images/Peta/Peta Takalar.jpg">
+  <link rel="preload" as="image" href="images/Peta/Peta Maros.jpeg">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* ===== Perbaikan Video Background ===== */
+    .hero iframe {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 120vw;   /* sedikit lebih besar agar menutupi area penuh */
+      height: 67.5vw; /* proporsi 16:9 */
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      pointer-events: none; /* video tidak interaktif */
+    }
+
+    /* Overlay hijau statis di atas video */
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 50, 0, 0.45); /* hijau transparan */
+      z-index: 1;
+      pointer-events: none; /* overlay statis, tidak bereaksi pada kursor */
+      transition: none !important; /* pastikan tidak ada animasi saat kursor bergerak */
+      transform: none !important; /* cegah perubahan transform */
+    }
+
+    /* Pastikan lapisan after tidak menutupi video */
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: transparent;
+      z-index: 0;
+    }
+
+    /* Pastikan konten hero tetap di atas overlay */
+    .hero-text,
+    .hero-image {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Pastikan konten teks sejajar ke kiri sehingga badge mengikuti margin teks */
+    .hero-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    /* Gallery Peta styling */
+    .gallery-card {
+      background: rgba(255,255,255,0.92);
+      border-left: 5px solid #198754;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(16, 93, 45, 0.08);
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+    .gallery-item {
+      overflow: hidden;
+      border-radius: 10px;
+      border: 1px solid rgba(25,135,84,0.08);
+      background: #fff;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .gallery-item img { width:100%; height:160px; object-fit:cover; display:block; }
+    .gallery-item:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(14,82,39,0.12); }
+    .gallery-caption { padding: 8px 10px; font-weight:700; color:#155835; font-size:0.95rem; text-align:center; }
+
+    /* Single transparent badge that groups all logos */
+    .hero-logos {
+      display: inline-flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 14px;
+      background: rgba(255,255,255,0.66); /* agak transparan */
+      padding: 8px 12px;
+      border-radius: 18px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.10);
+      border: 1px solid rgba(25,135,84,0.08);
+      backdrop-filter: blur(4px);
+      max-width: 420px; /* batasi lebar agar tidak terlalu panjang */
+      white-space: nowrap;
+      justify-content: flex-start;
+      align-self: flex-start; /* pastikan badge berada di sisi terluar teks */
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hero-logos img {
+      height: auto;
+      max-height: 36px;
+      max-width: 90px;
+      width: auto;
+      display: block;
+      opacity: 0.96;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));
+    }
+    @media (max-width: 768px) {
+      .hero-logos {
+        justify-content: center;
+        gap: 12px;
+        padding: 8px 12px;
+        align-self: center;
+      }
+
+      .hero-text {
+        align-items: center;
+        text-align: center;
+      }
+
+      .hero-logos img {
+        height: 28px;
+      }
+    }
+    /* Layout: sticky footer setup */
+    html, body { height: 100%; }
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    #page-wrapper { flex: 1 0 auto; }
+    /* Make carousel images fully visible (contain) */
+    .peta-carousel-img { width:100%; height:520px; object-fit:contain; background:#fff; display:block; }
+
+    /* Balanced two-column gallery */
+    .gallery-card { padding:18px; }
+    .gallery-row { display:flex; gap:16px; align-items:stretch; }
+    .gallery-main { flex: 0 0 60%; min-height:520px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:8px; background:#fff; }
+    .gallery-side { flex: 1 1 40%; display:flex; flex-direction:column; gap:12px; }
+    .gallery-side .side-item { flex:1 1 50%; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:8px; background:#fff; }
+    .gallery-thumb { width:100%; height:100%; object-fit:cover; cursor:zoom-in; transition: transform 0.22s ease; display:block; }
+    .gallery-thumb:hover { transform: scale(1.02); }
+
+    @media (max-width: 992px) {
+      .gallery-main { min-height:420px; }
+      .peta-carousel-img { height:420px; }
+    }
+    @media (max-width: 768px) {
+      .gallery-row { flex-direction:column; }
+      .gallery-main { min-height:360px; }
+      .gallery-side { flex-direction:column; }
+      .gallery-side .side-item { min-height:160px; }
+      .gallery-thumb { object-fit:contain; }
+    }
+
+    /* Quick image placeholder + fade-in */
+    img.img-placeholder { display:block; width:100%; height:100%; object-fit:cover; background: linear-gradient(180deg,#eaf6ea,#d7efdb); opacity:0; transition: opacity .36s ease; }
+    img.img-placeholder.loaded { opacity:1; }
+
+    
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="navbar navbar-expand-lg navbar-dark bg-success fixed-top shadow-sm">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand d-flex align-items-center" href="#">
+        <img src="images/logo_mangrove.png" alt="Logo Proyek" class="logo me-2">
+        <span>Mangrove Carbon Maminasata</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">Beranda</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="map.html">WebGIS</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="storymaps.html">Story Maps</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </header>
+  <div id="page-wrapper">
+
+  <!-- Hero Section -->
+  <section class="hero d-flex align-items-center justify-content-between px-5">
+
+    <!-- YouTube video background -->
+    <iframe 
+      src="https://www.youtube.com/embed/_xYLooJTRSo?autoplay=1&mute=1&loop=1&playlist=_xYLooJTRSo&controls=0&modestbranding=1&showinfo=0&vq=hd1080" 
+      frameborder="0"
+      allow="autoplay; fullscreen"
+      allowfullscreen>
+    </iframe>
+
+    <div class="hero-text">
+      <div class="hero-logos" aria-hidden="true">
+        <img src="images/logo/logo1.png" alt="Logo 1">
+        <img src="images/logo/logo2.png" alt="Logo 2">
+        <img src="images/logo/logo3.png" alt="Logo 3">
+        <img src="images/logo/logo4.png" alt="Logo 4">
+      </div>
+      <h1>🌿 WebGIS Mangrove Maminasata</h1>
+      <p>Hibah Hilirisasi Riset Sinergi 2025
+      Direktorat Jenderal Riset Dan Pengembangan
+        Kementerian Pendidikan Tinggi, Sains, Dan Teknologi
+.</p>
+      <a href="map.html" class="btn btn-success btn-lg mt-3">Lihat Peta</a>
+    </div>
+
+    <div class="hero-image">
+      <div class="laptop-frame">
+        <img src="images/laptop.png" alt="Laptop Mockup">
+        <div class="laptop-screen">
+          <img id="screen-demo" src="images/screen-demo.png" alt="WebGIS Screenshot" loading="eager" decoding="async" fetchpriority="high" class="img-placeholder">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Charts Section -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <!-- Main Layout: Left Column (2 charts) + Right Column (1 table) -->
+      <div class="row g-4">
+        <!-- LEFT COLUMN: CO2e Chart + C-Organik Chart -->
+        <div class="col-lg-6">
+          <!-- CO2e Chart -->
+          <div class="card shadow-lg border-0 mb-4" style="background: rgba(255, 255, 255, 0.85); border-left: 5px solid #198754; border-radius: 20px; transition: transform 0.3s ease; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div class="card-body p-4">
+              <div style="background: linear-gradient(135deg, #198754, #20a759); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <h2 class="text-center mb-2 text-white fw-bold" style="font-size: 1.3rem;">🌿 CO2e (Ton) per Habitat</h2>
+                <p class="text-center mb-0 text-muted" style="font-size: 0.9rem;">Potensi Emisi CO2 Setara</p>
+              </div>
+              <div class="chart-container" style="position: relative; height: 40vh; width: 100%;">
+                <canvas id="co2eChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- C-Organik Chart -->
+          <div class="card shadow-lg border-0" style="background: rgba(255, 255, 255, 0.85); border-left: 5px solid #198754; border-radius: 20px; transition: transform 0.3s ease; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div class="card-body p-4">
+              <div style="background: linear-gradient(135deg, #198754, #20a759); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <h2 class="text-center mb-2 text-white fw-bold" style="font-size: 1.3rem;">🌱 C-Organik Tanah (ton/hektar)</h2>
+                <p class="text-center mb-0 text-muted" style="font-size: 0.9rem;">Konsentrasi Karbon Organik dalam Tanah</p>
+              </div>
+              <div class="chart-container" style="position: relative; height: 40vh; width: 100%;">
+                <canvas id="organicCChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Karbon Tersimpan Table -->
+        <div class="col-lg-6">
+          <div class="card shadow-lg border-0" style="background: rgba(255, 255, 255, 0.85); border-left: 5px solid #198754; border-radius: 20px; transition: transform 0.3s ease; overflow: hidden; height: 100%;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div class="card-body p-4 d-flex flex-column" style="height: 100%;">
+              <div style="background: linear-gradient(135deg, #198754, #20a759); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <h2 class="text-center mb-2 text-white fw-bold" style="font-size: 1.3rem;">🌊 Karbon Tersimpan (Ton)</h2>
+                <p class="text-center mb-0 text-muted" style="font-size: 0.9rem;">Total Stok Karbon Organik per Habitat</p>
+              </div>
+              <div style="overflow-y: auto; flex-grow: 1;">
+                <table class="table table-hover table-striped mb-0" style="background: rgba(255,255,255,0.9); border-radius: 10px; overflow: hidden;">
+                  <thead style="background: linear-gradient(135deg, #198754 0%, #155835 100%); color: white; position: sticky; top: 0;">
+                    <tr>
+                      <th style="padding: 15px; font-weight: 700; border: none;">Habitat Mangrove</th>
+                      <th style="padding: 15px; font-weight: 700; text-align: right; border: none;">Karbon (Ton)</th>
+                      <th style="padding: 15px; font-weight: 700; text-align: right; border: none;">Persentase</th>
+                    </tr>
+                  </thead>
+                  <tbody id="carbonTableBody" style="font-size: 0.95rem;">
+                  </tbody>
+                  <tfoot style="background: rgba(25, 135, 84, 0.15); font-weight: 700; border-top: 2px solid #198754; position: sticky; bottom: 0;">
+                    <tr>
+                      <td style="padding: 15px; border: none;">TOTAL</td>
+                      <td style="padding: 15px; text-align: right; border: none;"><span id="carbonTotal">0</span> Ton</td>
+                      <td style="padding: 15px; text-align: right; border: none;">100%</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Galeri Peta (dua kolom) -->
+  <section class="container my-4">
+    <div class="card p-3" style="border-left:5px solid #198754;border-radius:14px;">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h3 class="mb-0" style="color:#0f5132">Galeri Peta</h3>
+        <small style="color:#0f5132;opacity:0.8">Klik untuk memperbesar dan zoom</small>
+      </div>
+
+      <div class="gallery-row">
+        <div class="gallery-main">
+          <img src="images/Peta/Peta Makassar.jpg" class="gallery-thumb img-placeholder" data-img="images/Peta/Peta Makassar.jpg" alt="Peta Makassar" loading="eager" decoding="async" fetchpriority="high">
+        </div>
+        <div class="gallery-side">
+          <div class="side-item">
+            <img src="images/Peta/Peta Takalar.jpg" class="gallery-thumb img-placeholder" data-img="images/Peta/Peta Takalar.jpg" alt="Peta Takalar" loading="eager" decoding="async" fetchpriority="high">
+          </div>
+          <div class="side-item">
+            <img src="images/Peta/Peta Maros.jpeg" class="gallery-thumb img-placeholder" data-img="images/Peta/Peta Maros.jpeg" alt="Peta Maros" loading="eager" decoding="async" fetchpriority="high">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </div>
+
+  <footer class="text-center mt-3 py-3 bg-light">
+    <small>© 2025 Aespace Project</small>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Modal zoom/pan untuk Galeri Peta -->
+  <div class="modal fade" id="petaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+      <div class="modal-content bg-transparent border-0">
+        <div class="modal-body p-0" style="background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;">
+          <div id="petaModalContainer" style="position:relative; overflow:hidden; max-width:1200px; width:100%; height:90vh;">
+            <img id="petaModalImg" src="" alt="" style="max-width:100%; max-height:100%; transform-origin:center center; transition:transform .05s ease; display:block; margin:auto;">
+            <button type="button" class="btn btn-light" id="petaModalClose" style="position:absolute; right:14px; top:14px; z-index:40;">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart.js Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // CO2e Chart with new data
+      const ctxCO2e = document.getElementById('co2eChart').getContext('2d');
+      const co2eData = [
+        { habitat: 'Kawasan Silvofishery Marana', co2e: 2.6947088833 },
+        { habitat: 'Kawasan Muara Sungai Binangasangkara', co2e: 3.6749471381 },
+        { habitat: 'Kawasan Karst Rammang-Rammang', co2e: 5.5068781109 },
+        { habitat: 'Kawasan Pantai Puntondo', co2e: 6.1510530939 },
+        { habitat: 'Kawasan Teluk Laikang', co2e: 3.3604298866 },
+        { habitat: 'Kawasan Rehabilitasi dan Ekowisata Lantebung', co2e: 3.0819921096 },
+        { habitat: 'Kawasan Delta Lakkang', co2e: 7.5129478975 },
+        { habitat: 'Kawasan Pulau Tanakeke', co2e: 4.1609279640 }
+      ];
+      
+      const co2eLabels = co2eData.map(item => item.habitat);
+      const co2eValues = co2eData.map(item => item.co2e);
+      const totalCO2e = co2eValues.reduce((a, b) => a + b, 0);
+      
+      const co2eChart = new Chart(ctxCO2e, {
+        type: 'bar',
+        data: {
+          labels: co2eLabels,
+          datasets: [{
+            label: 'CO2e (Ton)',
+            data: co2eValues,
+            backgroundColor: [
+              'rgba(25, 135, 84, 0.8)',
+              'rgba(32, 167, 89, 0.8)',
+              'rgba(21, 88, 53, 0.8)',
+              'rgba(29, 150, 85, 0.8)',
+              'rgba(38, 177, 90, 0.8)',
+              'rgba(25, 135, 84, 0.8)',
+              'rgba(32, 167, 89, 0.8)',
+              'rgba(17, 70, 42, 0.8)'
+            ],
+            borderColor: [
+              'rgba(17, 70, 42, 1)',
+              'rgba(25, 135, 84, 1)',
+              'rgba(21, 88, 53, 1)',
+              'rgba(25, 135, 84, 1)',
+              'rgba(32, 167, 89, 1)',
+              'rgba(25, 135, 84, 1)',
+              'rgba(32, 167, 89, 1)',
+              'rgba(17, 70, 42, 1)'
+            ],
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false,
+            hoverBackgroundColor: 'rgba(17, 70, 42, 1)',
+            hoverBorderColor: 'rgba(11, 47, 28, 1)',
+            hoverBorderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 2000, easing: 'easeInOutQuart' },
+          indexAxis: 'y',
+          scales: {
+            x: { 
+              beginAtZero: true, 
+              grid: { color: 'rgba(0, 0, 0, 0.1)' }, 
+              ticks: { callback: value => value.toFixed(2) + ' Ton' }
+            },
+            y: { grid: { display: false } }
+          },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { usePointStyle: true, padding: 20, font: { size: 14, weight: 'bold' } } },
+            title: { display: false },
+            tooltip: { 
+              backgroundColor: 'rgba(0, 0, 0, 0.85)', 
+              titleColor: '#fff', 
+              bodyColor: '#fff',
+              padding: 12,
+              callbacks: { 
+                label: (context) => {
+                  const percentage = ((context.parsed.x / totalCO2e) * 100).toFixed(1);
+                  return context.dataset.label + ': ' + context.parsed.x.toFixed(10) + ' Ton (' + percentage + '%)';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Stored Carbon Table Data
+      const carbonData = [
+        { habitat: 'Kawasan Silvofishery Marana', karbon: 0.0007578488 },
+        { habitat: 'Kawasan Muara Sungai Binangasangkara', karbon: 0.0010022492 },
+        { habitat: 'Kawasan Karst Rammang-Rammang', karbon: 0.0034851617 },
+        { habitat: 'Kawasan Pantai Puntondo', karbon: 0.0016775447 },
+        { habitat: 'Kawasan Teluk Laikang', karbon: 0.0009164725 },
+        { habitat: 'Kawasan Rehabilitasi dan Ekowisata Lantebung', karbon: 0.0010506696 },
+        { habitat: 'Kawasan Delta Lakkang', karbon: 0.0025394730 },
+        { habitat: 'Kawasan Pulau Tanakeke', karbon: 0.0011523559 }
+      ];
+      
+      const totalCarbon = carbonData.reduce((sum, item) => sum + item.karbon, 0);
+      
+      // Render table
+      const tableBody = document.getElementById('carbonTableBody');
+      const carbonTotal = document.getElementById('carbonTotal');
+      
+      carbonData.forEach((item, index) => {
+        const percentage = ((item.karbon / totalCarbon) * 100).toFixed(1);
+        const row = document.createElement('tr');
+        
+        // Alternate row colors - green success theme
+        const bgColor = index % 2 === 0 ? 'rgba(25, 135, 84, 0.05)' : 'rgba(32, 167, 89, 0.08)';
+        row.style.background = bgColor;
+        
+        row.innerHTML = `
+          <td style="padding: 12px 15px; border: none; border-left: 4px solid #198754;">
+            <strong>${item.habitat}</strong>
+          </td>
+          <td style="padding: 12px 15px; border: none; text-align: right; color: #155835; font-weight: 600;">
+            ${item.karbon.toFixed(10)} Ton
+          </td>
+          <td style="padding: 12px 15px; border: none; text-align: right;">
+            <span style="background: linear-gradient(135deg, #198754, #155835); color: white; padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">
+              ${percentage}%
+            </span>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+      
+      carbonTotal.textContent = totalCarbon.toFixed(10);
+
+      // Organic C Chart - Vertical Bar Chart
+      const ctxOrganic = document.getElementById('organicCChart').getContext('2d');
+      const organicCData = [
+        { habitat: 'Marana', nilai: 285.4807473 },
+        { habitat: 'Binangasangkara', nilai: 285.4807473 },
+        { habitat: 'Rammang-Rammang', nilai: 285.4807473 },
+        { habitat: 'Puntondo', nilai: 285.4807473 },
+        { habitat: 'Laikang', nilai: 285.4807473 },
+        { habitat: 'Lantebung', nilai: 285.4807473 },
+        { habitat: 'Lakkang', nilai: 396.1820824 },
+        { habitat: 'Tanakeke', nilai: 292.8608363 }
+      ];
+      
+      const organicLabels = organicCData.map(item => item.habitat);
+      const organicValues = organicCData.map(item => item.nilai);
+      const totalOrganic = organicValues.reduce((a, b) => a + b, 0);
+      
+      const organicCChart = new Chart(ctxOrganic, {
+        type: 'bar',
+        data: {
+          labels: organicLabels,
+          datasets: [{
+            label: 'C-organik (ton/hektar)',
+            data: organicValues,
+            backgroundColor: [
+              'rgba(32, 167, 89, 0.8)',
+              'rgba(38, 177, 90, 0.8)',
+              'rgba(29, 150, 85, 0.8)',
+              'rgba(25, 135, 84, 0.8)',
+              'rgba(32, 167, 89, 0.8)',
+              'rgba(25, 135, 84, 0.8)',
+              'rgba(42, 188, 95, 0.8)',
+              'rgba(38, 177, 90, 0.8)'
+            ],
+            borderColor: [
+              'rgba(21, 88, 53, 1)',
+              'rgba(29, 120, 76, 1)',
+              'rgba(25, 110, 70, 1)',
+              'rgba(21, 88, 53, 1)',
+              'rgba(21, 88, 53, 1)',
+              'rgba(21, 88, 53, 1)',
+              'rgba(32, 167, 89, 1)',
+              'rgba(29, 120, 76, 1)'
+            ],
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false,
+            hoverBackgroundColor: 'rgba(21, 88, 53, 1)',
+            hoverBorderColor: 'rgba(11, 47, 28, 1)',
+            hoverBorderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 2000, easing: 'easeInOutQuart' },
+          scales: {
+            y: { 
+              beginAtZero: true, 
+              grid: { color: 'rgba(0, 0, 0, 0.1)' }, 
+              ticks: { callback: value => value.toFixed(0) + ' ton/ha' }
+            },
+            x: { grid: { display: false } }
+          },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { usePointStyle: true, padding: 20, font: { size: 14, weight: 'bold' } } },
+            title: { display: false },
+            tooltip: { 
+              backgroundColor: 'rgba(0, 0, 0, 0.85)', 
+              titleColor: '#fff', 
+              bodyColor: '#fff',
+              padding: 12,
+              callbacks: { 
+                label: (context) => {
+                  const percentage = ((context.parsed.y / Math.max(...organicValues)) * 100).toFixed(1);
+                  return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' ton/ha (' + percentage + '%)';
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+  </script>
+
+  <script>
+    // Fade-in loaded images (placeholder -> real)
+    (function(){
+      function markLoaded(img){ img.classList.add('loaded'); }
+      var imgs = Array.from(document.querySelectorAll('img.img-placeholder'));
+      imgs.forEach(function(img){
+        if(img.complete && img.naturalWidth !== 0){ markLoaded(img); return; }
+        img.addEventListener('load', function(){ markLoaded(img); });
+        img.addEventListener('error', function(){ markLoaded(img); });
+      });
+    })();
+  </script>
+
+  <script>
+    // Gallery modal + zoom/pan handlers
+    document.addEventListener('DOMContentLoaded', function(){
+      var thumbs = document.querySelectorAll('.gallery-thumb');
+      var modalEl = document.getElementById('petaModal');
+      var modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+      var modalImg = document.getElementById('petaModalImg');
+      var container = document.getElementById('petaModalContainer');
+      var closeBtn = document.getElementById('petaModalClose');
+
+      var scale = 1, tx = 0, ty = 0;
+      var dragging = false, startX = 0, startY = 0, startTx = 0, startTy = 0;
+
+      function applyTransform(){
+        if(modalImg) modalImg.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
+      }
+
+      thumbs.forEach(function(t){
+        t.addEventListener('click', function(){
+          var src = t.dataset.img || t.src;
+          if(!modalImg) return;
+          modalImg.src = src;
+          scale = 1; tx = 0; ty = 0; applyTransform();
+          if(modal) modal.show();
+        });
+      });
+
+      // wheel zoom
+      if(container){
+        container.addEventListener('wheel', function(e){
+          e.preventDefault();
+          var delta = e.deltaY < 0 ? 0.12 : -0.12;
+          var next = Math.max(0.5, Math.min(5, scale + delta));
+          scale = next; applyTransform();
+        }, { passive: false });
+
+        // pan with mouse
+        container.addEventListener('mousedown', function(e){
+          dragging = true; startX = e.clientX; startY = e.clientY; startTx = tx; startTy = ty; container.style.cursor='grabbing';
+        });
+        window.addEventListener('mousemove', function(e){ if(!dragging) return; tx = startTx + (e.clientX - startX); ty = startTy + (e.clientY - startY); applyTransform(); });
+        window.addEventListener('mouseup', function(){ dragging = false; container.style.cursor='default'; });
+
+        // touch pan
+        var lastTouch = null;
+        container.addEventListener('touchstart', function(e){ if(e.touches && e.touches.length===1){ lastTouch = e.touches[0]; startX = lastTouch.clientX; startY = lastTouch.clientY; startTx = tx; startTy = ty; } });
+        container.addEventListener('touchmove', function(e){ if(e.touches && e.touches.length===1 && lastTouch){ e.preventDefault(); var t = e.touches[0]; tx = startTx + (t.clientX - startX); ty = startTy + (t.clientY - startY); applyTransform(); } }, { passive:false });
+        container.addEventListener('touchend', function(){ lastTouch = null; });
+      }
+
+      if(closeBtn){ closeBtn.addEventListener('click', function(){ if(modal) modal.hide(); }); }
+      if(modalEl){ modalEl.addEventListener('hidden.bs.modal', function(){ if(modalImg){ modalImg.src=''; modalImg.style.transform=''; } scale=1; tx=0; ty=0; }); }
+    });
+  </script>
+
+</body>
+</html>

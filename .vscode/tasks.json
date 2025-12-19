@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Open storymaps.html in browser",
+			"type": "shell",
+			"command": "start storymaps.html"
+		}
+	]
+}
