@@ -66,6 +66,16 @@
       align-items: flex-start;
     }
 
+    /* Heading: keep only the primary part on one line; subtitle below */
+    .hero-text h1 { font-size: 2rem; margin: 0 0 6px 0; line-height:1.05; }
+    .hero-text h1 .nowrap { white-space: nowrap; overflow-wrap: normal; }
+    .hero-text h1 .sub-title { display:block; font-size:1rem; font-weight:600; color:#0f5132; }
+    @media (max-width: 576px) {
+      .hero-text h1 { font-size: 1.25rem; }
+      .hero-text h1 .sub-title { font-size:0.95rem; }
+      .hero-text h1 .nowrap { white-space: normal; }
+    }
+
     /* Gallery Peta styling */
     .gallery-card {
       background: rgba(255,255,255,0.92);
@@ -171,6 +181,16 @@
     img.img-placeholder.loaded { opacity:1; }
 
     
+    /* Info panels styling for nicer appearance */
+    .info-wrap { max-width: 920px; }
+    .info-panels { display:flex; gap:14px; align-items:stretch; }
+    .info-panel { flex:1; display:flex; flex-direction:column; justify-content:space-between; background: linear-gradient(180deg, rgba(255,255,255,0.60), rgba(242,255,242,0.40)); padding:12px; border-radius:12px; border:1px solid rgba(25,135,84,0.06); box-shadow: 0 8px 20px rgba(15,65,30,0.05); transition: transform .18s ease, box-shadow .18s ease; }
+    .info-panel:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(15,65,30,0.10); }
+    .info-panel .names { color:#0f5132; font-weight:600; font-size:0.68rem; }
+    .info-panel .names ul { margin:0; padding-left:18px; }
+    .info-panel .names li { margin-bottom:4px; }
+    .label-badge { background:#198754; color:#fff; padding:6px 10px; border-radius:20px; display:inline-block; font-weight:700; font-size:0.64rem; }
+    @media (max-width:768px) { .info-panels { flex-direction:column; } .label-badge { font-size:0.68rem; } }
   </style>
 </head>
 <body>
@@ -180,7 +200,7 @@
     <div class="container-fluid px-4">
       <a class="navbar-brand d-flex align-items-center" href="#">
         <img src="images/logo_mangrove.png" alt="Logo Proyek" class="logo me-2">
-        <span>Mangrove Carbon Mamminasata</span>
+        <span>Mangrove Carbon Maminasata</span>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -220,18 +240,41 @@
         <img src="images/logo/logo3.png" alt="Logo 3">
         <img src="images/logo/logo4.png" alt="Logo 4">
       </div>
-      <h1>🌿 WebGIS Mangrove Mamminasata</h1>
+      <h1><span class="nowrap">🌿 WebGIS Mangrove</span><span class="sub-title">Maminasata</span></h1>
       <p>Hibah Hilirisasi Riset Sinergi 2025
       Direktorat Jenderal Riset Dan Pengembangan
         Kementerian Pendidikan Tinggi, Sains, Dan Teknologi
 .</p>
-      <p> Sayyid Zainal Abidin, S.Pi. (Mitra). Cabang Dinas Kelautan Mamminasata Dinas kelautan dan Perikanan Provinsi Sulawesi Selatan.</p>
-      <p>Peneliti : Amal, S.Pi, M.Si, Ph.D, 
-        Prof Uca, S.Si, MP. Ph.D. 
-        Prof. Muhammad Rakib, S.Pd, M.Pd, Ph.D, 
-        Dr. Muhammad Yusuf, S.Si, S.Pd, M.Pd. 
-        Univerista Negeri Makassar
-      .</p>
+
+      <div class="mt-3 info-wrap">
+        <div class="info-panels">
+          <div class="info-panel">
+            <div class="names">
+              <ul>
+                <li>Sayyid Zainal Abidin, S.Pi.</li>
+              </ul>
+            </div>
+            <div style="margin-top:10px; text-align:left;">
+              <span class="label-badge">Mitra: Cabang Dinas Kelautan Mamminasata, Dinas kelautan dan Perikanan Provinsi Sulawesi Selatan</span>
+            </div>
+          </div>
+
+          <div class="info-panel">
+            <div class="names">
+              <ul>
+                <li>Amal, S.Pi, M.Si, Ph.D</li>
+                <li>Prof Uca, S.Si, MP, Ph.D</li>
+                <li>Prof. Muhammad Rakib, S.Pd, M.Pd, Ph.D</li>
+                <li>Dr. Muhammad Yusuf, S.Si, S.Pd, M.Pd</li>
+              </ul>
+            </div>
+            <div style="margin-top:10px; text-align:right;">
+              <span class="label-badge">Peneliti : Universitas Negeri Makssar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <a href="map.html" class="btn btn-success btn-lg mt-3">Lihat Peta</a>
     </div>
 
