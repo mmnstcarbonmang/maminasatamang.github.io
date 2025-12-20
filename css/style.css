@@ -106,7 +106,7 @@ header .logo {
   animation: popIn 640ms cubic-bezier(.22,.9,.35,1) both;
 }
 
-.laptop-frame img { display: block; width: 100%; height: auto; z-index: 1; border-radius: 12px; }
+.laptop-frame img { display: block; width: 100%; height: auto; z-index: 1; border-radius: 12px; box-shadow: none; }
 .laptop-screen { z-index: 2; }
 
 .laptop-screen {
@@ -115,7 +115,7 @@ header .logo {
   inset: 7% 9% 7% 9%; /* top right bottom left */
   overflow: hidden;
   border-radius: 8px;
-  box-shadow: inset 0 6px 18px rgba(0,0,0,0.12);
+  box-shadow: none; /* remove inset shadow to make screen/background cleaner */
 }
 
 .laptop-screen img {
