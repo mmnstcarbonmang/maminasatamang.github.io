@@ -67,9 +67,9 @@
     }
 
     /* Heading: keep only the primary part on one line; subtitle below */
-    .hero-text h1 { font-size: 2rem; margin: 0 0 6px 0; line-height:1.05; }
+    .hero-text h1 { font-size: 2rem; margin: 0 0 0 0; line-height:1.05; color: #fff; }
     .hero-text h1 .nowrap { white-space: nowrap; overflow-wrap: normal; }
-    .hero-text h1 .sub-title { display:block; font-size:1rem; font-weight:600; color:#0f5132; }
+    .hero-text h1 .sub-title { display:block; font-size:2rem; font-weight:600; color: #fff; }
     @media (max-width: 576px) {
       .hero-text h1 { font-size: 1.25rem; }
       .hero-text h1 .sub-title { font-size:0.95rem; }
@@ -102,41 +102,52 @@
     .gallery-item:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(14,82,39,0.12); }
     .gallery-caption { padding: 8px 10px; font-weight:700; color:#155835; font-size:0.95rem; text-align:center; }
 
+    /* Container untuk logo + heading horizontal */
+    .hero-top {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      width: 100%;
+    }
+
     /* Single transparent badge that groups all logos */
     .hero-logos {
       display: inline-flex;
       gap: 14px;
       align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 24px;
       background: rgba(255,255,255,0.66); /* agak transparan */
       padding: 8px 12px;
       border-radius: 18px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.10);
       border: 1px solid rgba(25,135,84,0.08);
       backdrop-filter: blur(4px);
-      max-width: 420px; /* batasi lebar agar tidak terlalu panjang */
       white-space: nowrap;
       justify-content: flex-start;
-      align-self: flex-start; /* pastikan badge berada di sisi terluar teks */
       overflow: hidden;
       text-overflow: ellipsis;
+      flex-shrink: 0;
     }
 
     .hero-logos img {
       height: auto;
-      max-height: 36px;
-      max-width: 90px;
+      max-height: 160px;
+      max-width: 420px;
       width: auto;
       display: block;
       opacity: 0.96;
       filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));
     }
     @media (max-width: 768px) {
+      .hero-top {
+        flex-direction: column;
+        align-items: center;
+      }
+
       .hero-logos {
         justify-content: center;
         gap: 12px;
         padding: 8px 12px;
-        align-self: center;
       }
 
       .hero-text {
@@ -235,12 +246,11 @@
 
     <div class="hero-text">
       <div class="hero-logos" aria-hidden="true">
-        <img src="images/logo/logo1.png" alt="Logo 1">
-        <img src="images/logo/logo2.png" alt="Logo 2">
-        <img src="images/logo/logo3.png" alt="Logo 3">
-        <img src="images/logo/logo4.png" alt="Logo 4">
+        <img src="images/logo/LogoWeb.png" alt="Logo Web">
       </div>
-      <h1><span class="nowrap">🌿 WebGIS Mangrove Maminasata</span></h1>
+      <div class="hero-top">
+        <h1><span class="nowrap">🌿 WebGIS Mangrove</span><span class="sub-title">Maminasata</span></h1>
+      </div>
       <p>Hibah Hilirisasi Riset Sinergi 2025
       Direktorat Jenderal Riset Dan Pengembangan
         Kementerian Pendidikan Tinggi, Sains, Dan Teknologi
